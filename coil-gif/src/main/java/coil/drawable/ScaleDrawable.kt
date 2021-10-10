@@ -91,20 +91,20 @@ class ScaleDrawable @JvmOverloads constructor(
 
     override fun getIntrinsicHeight(): Int = child.intrinsicHeight
 
-    override fun unscheduleDrawable(who: Drawable, what: Runnable): Unit = unscheduleSelf(what)
+    override fun unscheduleDrawable(who: Drawable, what: Runnable) = unscheduleSelf(what)
 
-    override fun invalidateDrawable(who: Drawable): Unit = invalidateSelf()
+    override fun invalidateDrawable(who: Drawable) = invalidateSelf()
 
-    override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long): Unit = scheduleSelf(what, `when`)
+    override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) = scheduleSelf(what, `when`)
 
-    override fun setTint(tintColor: Int): Unit = child.setTint(tintColor)
+    override fun setTint(tintColor: Int) = child.setTint(tintColor)
 
-    override fun setTintList(tint: ColorStateList?): Unit = child.setTintList(tint)
+    override fun setTintList(tint: ColorStateList?) = child.setTintList(tint)
 
-    override fun setTintMode(tintMode: PorterDuff.Mode?): Unit = child.setTintMode(tintMode)
+    override fun setTintMode(tintMode: PorterDuff.Mode?) = child.setTintMode(tintMode)
 
     @RequiresApi(29)
-    override fun setTintBlendMode(blendMode: BlendMode?): Unit = child.setTintBlendMode(blendMode)
+    override fun setTintBlendMode(blendMode: BlendMode?) = child.setTintBlendMode(blendMode)
 
     override fun isRunning(): Boolean = child is Animatable && child.isRunning
 

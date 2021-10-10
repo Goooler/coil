@@ -47,7 +47,7 @@ internal class RealDiskCache(
         override val metadata get(): File = snapshot.entry.cleanFiles[ENTRY_METADATA].toFile()
         override val data get(): File = snapshot.entry.cleanFiles[ENTRY_DATA].toFile()
 
-        override fun close(): Unit = snapshot.close()
+        override fun close() = snapshot.close()
         override fun closeAndEdit(): Editor? = snapshot.closeAndEdit()?.let(::RealEditor)
     }
 
@@ -56,9 +56,9 @@ internal class RealDiskCache(
         override val metadata get(): File = editor.entry.dirtyFiles[ENTRY_METADATA].toFile()
         override val data get(): File = editor.entry.dirtyFiles[ENTRY_DATA].toFile()
 
-        override fun commit(): Unit = editor.commit()
+        override fun commit() = editor.commit()
         override fun commitAndGet(): Snapshot? = editor.commitAndGet()?.let(::RealSnapshot)
-        override fun abort(): Unit = editor.abort()
+        override fun abort() = editor.abort()
     }
 
     companion object {

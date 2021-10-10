@@ -167,11 +167,11 @@ class CrossfadeDrawable @JvmOverloads constructor(
 
     override fun getIntrinsicHeight(): Int = intrinsicHeight
 
-    override fun unscheduleDrawable(who: Drawable, what: Runnable): Unit = unscheduleSelf(what)
+    override fun unscheduleDrawable(who: Drawable, what: Runnable) = unscheduleSelf(what)
 
-    override fun invalidateDrawable(who: Drawable): Unit = invalidateSelf()
+    override fun invalidateDrawable(who: Drawable) = invalidateSelf()
 
-    override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long): Unit = scheduleSelf(what, `when`)
+    override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) = scheduleSelf(what, `when`)
 
     override fun setTint(tintColor: Int) {
         start?.setTint(tintColor)
@@ -228,7 +228,7 @@ class CrossfadeDrawable @JvmOverloads constructor(
         return callbacks.remove(callback)
     }
 
-    override fun clearAnimationCallbacks(): Unit = callbacks.clear()
+    override fun clearAnimationCallbacks() = callbacks.clear()
 
     /** Update the [Drawable]'s bounds inside [targetBounds] preserving aspect ratio. */
     @VisibleForTesting

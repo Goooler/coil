@@ -47,14 +47,14 @@ internal class SystemCallbacks(
         imageLoader.get() ?: shutdown()
     }
 
-    override fun onTrimMemory(level: Int): Unit = withImageLoader { imageLoader ->
+    override fun onTrimMemory(level: Int) = withImageLoader { imageLoader ->
         imageLoader.logger?.log(TAG, Log.VERBOSE) { "trimMemory, level=$level" }
         imageLoader.onTrimMemory(level)
     }
 
-    override fun onLowMemory(): Unit = onTrimMemory(TRIM_MEMORY_COMPLETE)
+    override fun onLowMemory() = onTrimMemory(TRIM_MEMORY_COMPLETE)
 
-    override fun onConnectivityChange(isOnline: Boolean): Unit = withImageLoader { imageLoader ->
+    override fun onConnectivityChange(isOnline: Boolean) = withImageLoader { imageLoader ->
         imageLoader.logger?.log(TAG, Log.INFO) { if (isOnline) ONLINE else OFFLINE }
         _isOnline = isOnline
     }

@@ -202,7 +202,7 @@ class ImagePainter internal constructor(
         requestJob = null
     }
 
-    override fun onAbandoned(): Unit = onForgotten()
+    override fun onAbandoned() = onForgotten()
 
     /** Update the [request] to work with [ImagePainter]. */
     private fun updateRequest(request: ImageRequest, size: Size): ImageRequest {

@@ -142,8 +142,7 @@ class BitmapFactoryDecoder @JvmOverloads constructor(
         outBitmap.density = options.context.resources.displayMetrics.densityDpi
 
         // Apply any EXIF transformations.
-        val bitmap =
-            applyExifTransformations(outBitmap, inPreferredConfig, isFlipped, rotationDegrees)
+        val bitmap = applyExifTransformations(outBitmap, inPreferredConfig, isFlipped, rotationDegrees)
 
         return DecodeResult(
             drawable = bitmap.toDrawable(options.context),
@@ -276,7 +275,7 @@ class BitmapFactoryDecoder @JvmOverloads constructor(
 
         override fun available(): Int = availableBytes
 
-        override fun close(): Unit = delegate.close()
+        override fun close() = delegate.close()
 
         private fun interceptBytesRead(bytesRead: Int): Int {
             if (bytesRead == -1) availableBytes = 0

@@ -273,7 +273,7 @@ class MovieDrawable @JvmOverloads constructor(
         return callbacks.remove(callback)
     }
 
-    override fun clearAnimationCallbacks(): Unit = callbacks.clear()
+    override fun clearAnimationCallbacks() = callbacks.clear()
 
     private val Canvas.bounds: Rect get() = tempCanvasBounds.apply { set(0, 0, width, height) }
 

@@ -28,7 +28,7 @@ internal val PixelOpacity.flag: Int
 internal fun animatable2CallbackOf(
     onStart: (() -> Unit)?,
     onEnd: (() -> Unit)?
-): Animatable2.AnimationCallback = object : Animatable2.AnimationCallback() {
+) = object : Animatable2.AnimationCallback() {
     override fun onAnimationStart(drawable: Drawable?) { onStart?.invoke() }
     override fun onAnimationEnd(drawable: Drawable?) { onEnd?.invoke() }
 }
@@ -36,7 +36,7 @@ internal fun animatable2CallbackOf(
 internal fun animatable2CompatCallbackOf(
     onStart: (() -> Unit)?,
     onEnd: (() -> Unit)?
-): Animatable2Compat.AnimationCallback = object : Animatable2Compat.AnimationCallback() {
+) = object : Animatable2Compat.AnimationCallback() {
     override fun onAnimationStart(drawable: Drawable?) { onStart?.invoke() }
     override fun onAnimationEnd(drawable: Drawable?) { onEnd?.invoke() }
 }

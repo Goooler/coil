@@ -150,7 +150,7 @@ interface ImageLoader {
          *
          * This is a convenience function for calling `callFactory(Call.Factory)`.
          */
-        fun okHttpClient(okHttpClient: OkHttpClient): Builder = callFactory(okHttpClient)
+        fun okHttpClient(okHttpClient: OkHttpClient) = callFactory(okHttpClient)
 
         /**
          * Set a lazy callback to create the [OkHttpClient] used for network requests.
@@ -162,7 +162,7 @@ interface ImageLoader {
          *
          * This is a convenience function for calling `callFactory(() -> Call.Factory)`.
          */
-        fun okHttpClient(initializer: () -> OkHttpClient): Builder = callFactory(initializer)
+        fun okHttpClient(initializer: () -> OkHttpClient) = callFactory(initializer)
 
         /**
          * Set the [Call.Factory] used for network requests.
@@ -189,7 +189,7 @@ interface ImageLoader {
         @JvmSynthetic
         inline fun components(
             builder: ComponentRegistry.Builder.() -> Unit
-        ): Builder = components(ComponentRegistry.Builder().apply(builder).build())
+        ) = components(ComponentRegistry.Builder().apply(builder).build())
 
         /**
          * Set the [ComponentRegistry].
@@ -323,7 +323,7 @@ interface ImageLoader {
          *
          * @see eventListenerFactory
          */
-        fun eventListener(listener: EventListener): Builder = eventListenerFactory { listener }
+        fun eventListener(listener: EventListener) = eventListenerFactory { listener }
 
         /**
          * Set the [EventListener.Factory] to create per-request [EventListener]s.

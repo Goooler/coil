@@ -98,4 +98,4 @@ inline fun ImageView.loadAny(
     ),
     level = DeprecationLevel.ERROR // Temporary migration aid.
 )
-inline fun ImageView.clear(): Unit = dispose()
+inline fun ImageView.clear() = dispose()
