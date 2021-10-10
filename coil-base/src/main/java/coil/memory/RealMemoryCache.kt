@@ -8,11 +8,11 @@ internal class RealMemoryCache(
     private val weakMemoryCache: WeakMemoryCache
 ) : MemoryCache {
 
-    override val size get(): Int = strongMemoryCache.size
+    override val size: Int get() = strongMemoryCache.size
 
-    override val maxSize get(): Int = strongMemoryCache.maxSize
+    override val maxSize: Int get() = strongMemoryCache.maxSize
 
-    override val keys get(): Set<Key> = strongMemoryCache.keys + weakMemoryCache.keys
+    override val keys: Set<Key> get() = strongMemoryCache.keys + weakMemoryCache.keys
 
     override fun get(key: Key): MemoryCache.Value? {
         return strongMemoryCache.get(key) ?: weakMemoryCache.get(key)
