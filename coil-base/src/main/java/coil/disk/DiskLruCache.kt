@@ -22,7 +22,6 @@ import coil.util.forEachIndices
 import okio.BufferedSink
 import okio.Closeable
 import okio.EOFException
-import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.ForwardingFileSystem
 import okio.IOException
@@ -76,7 +75,6 @@ import java.util.concurrent.Executors
  * @param valueCount the number of values per cache entry. Must be positive.
  * @param maxSize the maximum number of bytes this cache should use to store.
  */
-@OptIn(ExperimentalFileSystem::class)
 internal class DiskLruCache(
     fileSystem: FileSystem,
     private val directory: Path,
@@ -165,10 +163,10 @@ internal class DiskLruCache(
     }
 
     private val fileSystem = object : ForwardingFileSystem(fileSystem) {
-        override fun sink(file: Path): Sink {
-            // Ensure the parent directory for the file is created if it doesn't already exist.
-            file.parent?.let { if (!exists(it)) createDirectories(it) }
-            return super.sink(file)
+        override fun sink(file: Path, mustCreate: Boolean): Sink {
+            // Ensure the parent directory for the file exists.
+            file.parent?.let(::createDirectories)
+            return super.sink(file, mustCreate)
         }
     }
 
