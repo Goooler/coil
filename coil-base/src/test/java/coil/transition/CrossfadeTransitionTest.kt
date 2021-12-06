@@ -10,13 +10,8 @@ import coil.drawable.CrossfadeDrawable
 import coil.request.ErrorResult
 import coil.request.SuccessResult
 import coil.util.createRequest
-import coil.util.createTestMainDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import org.junit.After
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,24 +21,17 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class CrossfadeTransitionTest {
 
     private lateinit var context: Context
-    private lateinit var mainDispatcher: TestCoroutineDispatcher
     private lateinit var transitionFactory: CrossfadeTransition.Factory
 
     @Before
     fun before() {
         context = ApplicationProvider.getApplicationContext()
-        mainDispatcher = createTestMainDispatcher()
         transitionFactory = CrossfadeTransition.Factory()
-    }
-
-    @After
-    fun after() {
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -61,11 +49,7 @@ class CrossfadeTransitionTest {
         val result = SuccessResult(
             drawable = drawable,
             request = createRequest(context),
-            dataSource = DataSource.MEMORY_CACHE,
-            memoryCacheKey = null,
-            diskCacheKey = null,
-            isSampled = false,
-            isPlaceholderCached = false
+            dataSource = DataSource.MEMORY_CACHE
         )
         transitionFactory.create(target, result).transition()
 
@@ -91,11 +75,7 @@ class CrossfadeTransitionTest {
         val result = SuccessResult(
             drawable = drawable,
             request = createRequest(context),
-            dataSource = DataSource.DISK,
-            memoryCacheKey = null,
-            diskCacheKey = null,
-            isSampled = false,
-            isPlaceholderCached = false
+            dataSource = DataSource.DISK
         )
         transitionFactory.create(target, result).transition()
 
@@ -103,26 +83,24 @@ class CrossfadeTransitionTest {
     }
 
     @Test
-    fun `failure - disk`() {
+    fun `failure - disk`() = runTest {
         val drawable = ColorDrawable()
         var onSuccessCalled = false
 
-        runBlocking {
-            transitionFactory.create(
-                target = createTransitionTarget(
-                    onError = { error ->
-                        assertFalse(onSuccessCalled)
-                        assertTrue(error !is CrossfadeDrawable)
-                        onSuccessCalled = true
-                    }
-                ),
-                result = ErrorResult(
-                    drawable = drawable,
-                    request = createRequest(context),
-                    throwable = Throwable()
-                )
-            ).transition()
-        }
+        transitionFactory.create(
+            target = createTransitionTarget(
+                onError = { error ->
+                    assertFalse(onSuccessCalled)
+                    assertTrue(error !is CrossfadeDrawable)
+                    onSuccessCalled = true
+                }
+            ),
+            result = ErrorResult(
+                drawable = drawable,
+                request = createRequest(context),
+                throwable = Throwable()
+            )
+        ).transition()
 
         assertTrue(onSuccessCalled)
     }

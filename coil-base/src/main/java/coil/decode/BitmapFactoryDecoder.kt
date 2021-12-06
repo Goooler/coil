@@ -12,7 +12,7 @@ import androidx.exifinterface.media.ExifInterface
 import coil.ImageLoader
 import coil.fetch.SourceResult
 import coil.request.Options
-import coil.size.PixelSize
+import coil.size.pxOrElse
 import coil.util.toDrawable
 import coil.util.toSoftware
 import kotlinx.coroutines.runInterruptible
@@ -77,54 +77,49 @@ class BitmapFactoryDecoder @JvmOverloads constructor(
 
         // Always create immutable bitmaps as they have performance benefits.
         inMutable = false
-        inScaled = false
 
-        when {
-            outWidth <= 0 || outHeight <= 0 -> {
-                // This occurs if there was an error decoding the image's size.
-                inSampleSize = 1
-                inScaled = false
-                inBitmap = null
+        if (outWidth > 0 && outHeight > 0) {
+            val (width, height) = options.size
+            val dstWidth = width.pxOrElse { srcWidth }
+            val dstHeight = height.pxOrElse { srcHeight }
+            inSampleSize = DecodeUtils.calculateInSampleSize(
+                srcWidth = srcWidth,
+                srcHeight = srcHeight,
+                dstWidth = dstWidth,
+                dstHeight = dstHeight,
+                scale = options.scale
+            )
+
+            // Calculate the image's density scaling multiple.
+            var scale = DecodeUtils.computeSizeMultiplier(
+                srcWidth = srcWidth / inSampleSize.toDouble(),
+                srcHeight = srcHeight / inSampleSize.toDouble(),
+                dstWidth = dstWidth.toDouble(),
+                dstHeight = dstHeight.toDouble(),
+                scale = options.scale
+            )
+
+            // Avoid loading the image larger than its original dimensions if allowed.
+            if (options.allowInexactSize) {
+                scale = scale.coerceAtMost(1.0)
             }
-            options.size !is PixelSize -> {
-                // This occurs if size is OriginalSize.
-                inSampleSize = 1
-                inScaled = false
-            }
-            else -> {
-                val (width, height) = options.size
-                inSampleSize = DecodeUtils
-                    .calculateInSampleSize(srcWidth, srcHeight, width, height, options.scale)
 
-                // Calculate the image's density scaling multiple.
-                val rawScale = DecodeUtils.computeSizeMultiplier(
-                    srcWidth = srcWidth / inSampleSize.toDouble(),
-                    srcHeight = srcHeight / inSampleSize.toDouble(),
-                    dstWidth = width.toDouble(),
-                    dstHeight = height.toDouble(),
-                    scale = options.scale
-                )
-
-                // Avoid loading the image larger than its original dimensions if allowed.
-                val scale = if (options.allowInexactSize) {
-                    rawScale.coerceAtMost(1.0)
+            inScaled = scale != 1.0
+            if (inScaled) {
+                if (scale > 1) {
+                    // Upscale
+                    inDensity = (Int.MAX_VALUE / scale).roundToInt()
+                    inTargetDensity = Int.MAX_VALUE
                 } else {
-                    rawScale
-                }
-
-                inScaled = scale != 1.0
-                if (inScaled) {
-                    if (scale > 1) {
-                        // Upscale
-                        inDensity = (Int.MAX_VALUE / scale).roundToInt()
-                        inTargetDensity = Int.MAX_VALUE
-                    } else {
-                        // Downscale
-                        inDensity = Int.MAX_VALUE
-                        inTargetDensity = (Int.MAX_VALUE * scale).roundToInt()
-                    }
+                    // Downscale
+                    inDensity = Int.MAX_VALUE
+                    inTargetDensity = (Int.MAX_VALUE * scale).roundToInt()
                 }
             }
+        } else {
+            // This occurs if there was an error decoding the image's size.
+            inSampleSize = 1
+            inScaled = false
         }
 
         // Decode the bitmap.
@@ -181,10 +176,7 @@ class BitmapFactoryDecoder @JvmOverloads constructor(
         return config
     }
 
-    /**
-     * NOTE: This method assumes [config] is not [Bitmap.Config.HARDWARE]
-     * if the image has to be transformed.
-     */
+    /** This method assumes [config] is not [Bitmap.Config.HARDWARE]. */
     private fun applyExifTransformations(
         inBitmap: Bitmap,
         config: Bitmap.Config,

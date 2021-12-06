@@ -15,17 +15,18 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.Contacts.Photo.CONTENT_DIRECTORY
 import android.provider.ContactsContract.Contacts.Photo.DISPLAY_PHOTO
 import android.provider.ContactsContract.RawContacts
+import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.rule.GrantPermissionRule
 import coil.ImageLoader
 import coil.request.Options
-import coil.size.PixelSize
-import kotlinx.coroutines.runBlocking
+import coil.util.assumeTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import okio.buffer
 import okio.sink
 import okio.source
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +35,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ContentUriFetcherTest {
 
     private lateinit var context: Context
@@ -52,33 +54,41 @@ class ContentUriFetcherTest {
     }
 
     @Test
-    fun contactsThumbnail() {
-        // This test is flaky on API 30.
-        assumeTrue(SDK_INT <= 30)
+    fun contactsThumbnail() = runTest {
+        // This test is flaky on API 30+.
+        assumeTrue(SDK_INT < 30)
 
         val uri = "$SCHEME_CONTENT://$AUTHORITY/contacts/$contactId/$CONTENT_DIRECTORY".toUri()
-        val options = Options(context, size = PixelSize(100, 100))
-        val fetcher = assertIs<ContentUriFetcher>(fetcherFactory.create(uri, options, ImageLoader(context)))
+        val fetcher = assertIs<ContentUriFetcher>(fetcherFactory.create(uri, Options(context), ImageLoader(context)))
 
         assertFalse(fetcher.isContactPhotoUri(uri))
         assertUriFetchesCorrectly(fetcher)
     }
 
     @Test
-    fun contactsDisplayPhoto() {
-        // This test is flaky on API 30.
-        assumeTrue(SDK_INT <= 30)
+    fun contactsDisplayPhoto() = runTest {
+        // This test is flaky on API 30+.
+        assumeTrue(SDK_INT < 30)
 
         val uri = "$SCHEME_CONTENT://$AUTHORITY/contacts/$contactId/$DISPLAY_PHOTO".toUri()
-        val options = Options(context, size = PixelSize(100, 100))
-        val fetcher = assertIs<ContentUriFetcher>(fetcherFactory.create(uri, options, ImageLoader(context)))
+        val fetcher = assertIs<ContentUriFetcher>(fetcherFactory.create(uri, Options(context), ImageLoader(context)))
 
         assertTrue(fetcher.isContactPhotoUri(uri))
         assertUriFetchesCorrectly(fetcher)
     }
 
-    private fun assertUriFetchesCorrectly(fetcher: ContentUriFetcher) {
-        val result = runBlocking { fetcher.fetch() }
+    @Test
+    fun musicThumbnail() {
+        assumeTrue(SDK_INT >= 29)
+
+        val uri = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, 1)
+        val fetcher = assertIs<ContentUriFetcher>(fetcherFactory.create(uri, Options(context), ImageLoader(context)))
+
+        assertTrue(fetcher.isMusicThumbnailUri(uri))
+    }
+
+    private suspend fun assertUriFetchesCorrectly(fetcher: ContentUriFetcher) {
+        val result = fetcher.fetch()
 
         assertTrue(result is SourceResult)
         assertEquals("image/jpeg", result.mimeType)

@@ -26,8 +26,11 @@ internal fun rememberCrossfadePainter(
     end: Painter?,
     scale: Scale,
     durationMillis: Int,
-    fadeStart: Boolean
-): Painter = remember(key) { CrossfadePainter(start, end, scale, durationMillis, fadeStart) }
+    fadeStart: Boolean,
+    preferExactIntrinsicSize: Boolean,
+): Painter = remember(key) {
+    CrossfadePainter(start, end, scale, durationMillis, fadeStart, preferExactIntrinsicSize)
+}
 
 /**
  * A [Painter] that crossfades from [start] to [end].
@@ -42,6 +45,7 @@ private class CrossfadePainter(
     private val scale: Scale,
     private val durationMillis: Int,
     private val fadeStart: Boolean,
+    private val preferExactIntrinsicSize: Boolean,
 ) : Painter() {
 
     private var invalidateTick by mutableStateOf(0)
@@ -95,14 +99,19 @@ private class CrossfadePainter(
         val startSize = start?.intrinsicSize ?: Size.Zero
         val endSize = end?.intrinsicSize ?: Size.Zero
 
-        return if (startSize.isSpecified && endSize.isSpecified) {
-            Size(
+        val isStartSpecified = startSize.isSpecified
+        val isEndSpecified = endSize.isSpecified
+        if (isStartSpecified && isEndSpecified) {
+            return Size(
                 width = max(startSize.width, endSize.width),
                 height = max(startSize.height, endSize.height),
             )
-        } else {
-            Size.Unspecified
         }
+        if (preferExactIntrinsicSize) {
+            if (isStartSpecified) return startSize
+            if (isEndSpecified) return endSize
+        }
+        return Size.Unspecified
     }
 
     private fun DrawScope.drawPainter(painter: Painter?, alpha: Float) {
@@ -118,7 +127,9 @@ private class CrossfadePainter(
                 inset(
                     horizontal = (size.width - drawSize.width) / 2,
                     vertical = (size.height - drawSize.height) / 2
-                ) { draw(drawSize, alpha, colorFilter) }
+                ) {
+                    draw(drawSize, alpha, colorFilter)
+                }
             }
         }
     }

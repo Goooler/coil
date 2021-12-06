@@ -1,3 +1,6 @@
+@file:JvmName("-Sizes")
+@file:Suppress("NOTHING_TO_INLINE", "unused")
+
 package coil.size
 
 import androidx.annotation.Px
@@ -9,20 +12,43 @@ import coil.request.ImageRequest
  * @see ImageRequest.Builder.size
  * @see SizeResolver.size
  */
-sealed class Size
+data class Size(
+    val width: Dimension,
+    val height: Dimension,
+) {
 
-/** Represents the width and height of the source image. */
-object OriginalSize : Size() {
-    override fun toString(): String = "coil.size.OriginalSize"
-}
+    /** Create a [Size] with a pixel value for width. */
+    constructor(@Px width: Int, height: Dimension) : this(Dimension(width), height)
 
-/** A positive width and height in pixels. */
-data class PixelSize(
-    @Px val width: Int,
-    @Px val height: Int,
-) : Size() {
+    /** Create a [Size] with a pixel value for height. */
+    constructor(width: Dimension, @Px height: Int) : this(width, Dimension(height))
 
-    init {
-        require(width > 0 && height > 0) { "width and height must be > 0." }
+    /** Create a [Size] with pixel values for both width and height. */
+    constructor(@Px width: Int, @Px height: Int) : this(Dimension(width), Dimension(height))
+
+    companion object {
+        /**
+         * A [Size] whose width and height are equal to the original dimensions of the source image.
+         */
+        @JvmField val ORIGINAL = Size(Dimension.Original, Dimension.Original)
     }
 }
+
+/**
+ * Return true if this size is equal to [Size.ORIGINAL]. Else, return false.
+ */
+val Size.isOriginal: Boolean
+    get() = this == Size.ORIGINAL
+
+@Deprecated(
+    message = "Migrate to 'coil.size.Size'.",
+    replaceWith = ReplaceWith("Size", "coil.size.Size")
+)
+typealias PixelSize = Size
+
+@Deprecated(
+    message = "Migrate to 'coil.size.Size.ORIGINAL'.",
+    replaceWith = ReplaceWith("Size.ORIGINAL", "coil.size.Size")
+)
+inline val OriginalSize: Size
+    @JvmName("OriginalSize") get() = Size.ORIGINAL

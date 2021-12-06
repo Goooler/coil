@@ -64,8 +64,6 @@ public final class coil/EventListener$Factory$Companion {
 }
 
 public abstract interface class coil/ImageLoader {
-	public static final field Companion Lcoil/ImageLoader$Companion;
-	public static fun create (Landroid/content/Context;)Lcoil/ImageLoader;
 	public abstract fun enqueue (Lcoil/request/ImageRequest;)Lcoil/request/Disposable;
 	public abstract fun execute (Lcoil/request/ImageRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getComponents ()Lcoil/ComponentRegistry;
@@ -125,11 +123,8 @@ public final class coil/ImageLoader$Builder {
 	public final fun transitionFactory (Lcoil/transition/Transition$Factory;)Lcoil/ImageLoader$Builder;
 }
 
-public final class coil/ImageLoader$Companion {
-	public final fun create (Landroid/content/Context;)Lcoil/ImageLoader;
-}
-
 public final class coil/ImageLoaders {
+	public static final fun create (Landroid/content/Context;)Lcoil/ImageLoader;
 	public static final fun executeBlocking (Lcoil/ImageLoader;Lcoil/request/ImageRequest;)Lcoil/request/ImageResult;
 }
 
@@ -177,7 +172,6 @@ public final class coil/decode/DecodeResult {
 public final class coil/decode/DecodeUtils {
 	public static final field INSTANCE Lcoil/decode/DecodeUtils;
 	public static final fun calculateInSampleSize (IIIILcoil/size/Scale;)I
-	public static final fun computePixelSize (IILcoil/size/Size;Lcoil/size/Scale;)Lcoil/size/PixelSize;
 	public static final fun computeSizeMultiplier (DDDDLcoil/size/Scale;)D
 	public static final fun computeSizeMultiplier (FFFFLcoil/size/Scale;)F
 	public static final fun computeSizeMultiplier (IIIILcoil/size/Scale;)D
@@ -225,6 +219,7 @@ public abstract interface class coil/disk/DiskCache {
 public final class coil/disk/DiskCache$Builder {
 	public fun <init> (Landroid/content/Context;)V
 	public final fun build ()Lcoil/disk/DiskCache;
+	public final fun cleanupDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)Lcoil/disk/DiskCache$Builder;
 	public final fun directory (Ljava/io/File;)Lcoil/disk/DiskCache$Builder;
 	public final fun maxSizeBytes (J)Lcoil/disk/DiskCache$Builder;
 	public final fun maxSizePercent (D)Lcoil/disk/DiskCache$Builder;
@@ -261,12 +256,14 @@ public final class coil/drawable/CrossfadeDrawable : android/graphics/drawable/D
 	public fun getAlpha ()I
 	public fun getColorFilter ()Landroid/graphics/ColorFilter;
 	public final fun getDurationMillis ()I
+	public final fun getEnd ()Landroid/graphics/drawable/Drawable;
 	public final fun getFadeStart ()Z
 	public fun getIntrinsicHeight ()I
 	public fun getIntrinsicWidth ()I
 	public fun getOpacity ()I
 	public final fun getPreferExactIntrinsicSize ()Z
 	public final fun getScale ()Lcoil/size/Scale;
+	public final fun getStart ()Landroid/graphics/drawable/Drawable;
 	public fun invalidateDrawable (Landroid/graphics/drawable/Drawable;)V
 	public fun isRunning ()Z
 	public fun registerAnimationCallback (Landroidx/vectordrawable/graphics/drawable/Animatable2Compat$AnimationCallback;)V
@@ -584,6 +581,7 @@ public final class coil/request/ImageRequest$Builder {
 	public static synthetic fun setParameter$default (Lcoil/request/ImageRequest$Builder;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lcoil/request/ImageRequest$Builder;
 	public final fun size (I)Lcoil/request/ImageRequest$Builder;
 	public final fun size (II)Lcoil/request/ImageRequest$Builder;
+	public final fun size (Lcoil/size/Dimension;Lcoil/size/Dimension;)Lcoil/request/ImageRequest$Builder;
 	public final fun size (Lcoil/size/Size;)Lcoil/request/ImageRequest$Builder;
 	public final fun size (Lcoil/size/SizeResolver;)Lcoil/request/ImageRequest$Builder;
 	public final fun target (Landroid/widget/ImageView;)Lcoil/request/ImageRequest$Builder;
@@ -688,6 +686,7 @@ public final class coil/request/Parameters$Entry {
 
 public final class coil/request/SuccessResult : coil/request/ImageResult {
 	public fun <init> (Landroid/graphics/drawable/Drawable;Lcoil/request/ImageRequest;Lcoil/decode/DataSource;Lcoil/memory/MemoryCache$Key;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Landroid/graphics/drawable/Drawable;Lcoil/request/ImageRequest;Lcoil/decode/DataSource;Lcoil/memory/MemoryCache$Key;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun copy (Landroid/graphics/drawable/Drawable;Lcoil/request/ImageRequest;Lcoil/decode/DataSource;Lcoil/memory/MemoryCache$Key;Ljava/lang/String;ZZ)Lcoil/request/SuccessResult;
 	public static synthetic fun copy$default (Lcoil/request/SuccessResult;Landroid/graphics/drawable/Drawable;Lcoil/request/ImageRequest;Lcoil/decode/DataSource;Lcoil/memory/MemoryCache$Key;Ljava/lang/String;ZZILjava/lang/Object;)Lcoil/request/SuccessResult;
 	public fun equals (Ljava/lang/Object;)Z
@@ -701,20 +700,28 @@ public final class coil/request/SuccessResult : coil/request/ImageResult {
 	public final fun isSampled ()Z
 }
 
-public final class coil/size/OriginalSize : coil/size/Size {
-	public static final field INSTANCE Lcoil/size/OriginalSize;
+public final class coil/size/-Dimensions {
+	public static final fun Dimension (I)Lcoil/size/Dimension$Pixels;
+	public static final fun pxOrElse (Lcoil/size/Dimension;Lkotlin/jvm/functions/Function0;)I
+}
+
+public final class coil/size/-Sizes {
+	public static final fun OriginalSize ()Lcoil/size/Size;
+	public static final fun isOriginal (Lcoil/size/Size;)Z
+}
+
+public abstract class coil/size/Dimension {
+}
+
+public final class coil/size/Dimension$Original : coil/size/Dimension {
+	public static final field INSTANCE Lcoil/size/Dimension$Original;
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class coil/size/PixelSize : coil/size/Size {
-	public fun <init> (II)V
-	public final fun component1 ()I
-	public final fun component2 ()I
-	public final fun copy (II)Lcoil/size/PixelSize;
-	public static synthetic fun copy$default (Lcoil/size/PixelSize;IIILjava/lang/Object;)Lcoil/size/PixelSize;
+public final class coil/size/Dimension$Pixels : coil/size/Dimension {
+	public final field px I
+	public fun <init> (I)V
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getHeight ()I
-	public final fun getWidth ()I
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -734,32 +741,45 @@ public final class coil/size/Scale : java/lang/Enum {
 	public static fun values ()[Lcoil/size/Scale;
 }
 
-public abstract class coil/size/Size {
+public final class coil/size/Size {
+	public static final field Companion Lcoil/size/Size$Companion;
+	public static final field ORIGINAL Lcoil/size/Size;
+	public fun <init> (II)V
+	public fun <init> (ILcoil/size/Dimension;)V
+	public fun <init> (Lcoil/size/Dimension;I)V
+	public fun <init> (Lcoil/size/Dimension;Lcoil/size/Dimension;)V
+	public final fun component1 ()Lcoil/size/Dimension;
+	public final fun component2 ()Lcoil/size/Dimension;
+	public final fun copy (Lcoil/size/Dimension;Lcoil/size/Dimension;)Lcoil/size/Size;
+	public static synthetic fun copy$default (Lcoil/size/Size;Lcoil/size/Dimension;Lcoil/size/Dimension;ILjava/lang/Object;)Lcoil/size/Size;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()Lcoil/size/Dimension;
+	public final fun getWidth ()Lcoil/size/Dimension;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class coil/size/Size$Companion {
 }
 
 public abstract interface class coil/size/SizeResolver {
-	public static final field Companion Lcoil/size/SizeResolver$Companion;
-	public static fun create (Lcoil/size/Size;)Lcoil/size/SizeResolver;
 	public abstract fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class coil/size/SizeResolver$Companion {
-	public final fun create (Lcoil/size/Size;)Lcoil/size/SizeResolver;
+public final class coil/size/SizeResolvers {
+	public static final fun create (Lcoil/size/Size;)Lcoil/size/SizeResolver;
 }
 
 public abstract interface class coil/size/ViewSizeResolver : coil/size/SizeResolver {
-	public static final field Companion Lcoil/size/ViewSizeResolver$Companion;
-	public static fun create (Landroid/view/View;)Lcoil/size/ViewSizeResolver;
-	public static fun create (Landroid/view/View;Z)Lcoil/size/ViewSizeResolver;
 	public fun getSubtractPadding ()Z
 	public abstract fun getView ()Landroid/view/View;
 	public fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class coil/size/ViewSizeResolver$Companion {
-	public final fun create (Landroid/view/View;)Lcoil/size/ViewSizeResolver;
-	public final fun create (Landroid/view/View;Z)Lcoil/size/ViewSizeResolver;
-	public static synthetic fun create$default (Lcoil/size/ViewSizeResolver$Companion;Landroid/view/View;ZILjava/lang/Object;)Lcoil/size/ViewSizeResolver;
+public final class coil/size/ViewSizeResolvers {
+	public static final fun create (Landroid/view/View;)Lcoil/size/ViewSizeResolver;
+	public static final fun create (Landroid/view/View;Z)Lcoil/size/ViewSizeResolver;
+	public static synthetic fun create$default (Landroid/view/View;ZILjava/lang/Object;)Lcoil/size/ViewSizeResolver;
 }
 
 public abstract class coil/target/GenericViewTarget : androidx/lifecycle/DefaultLifecycleObserver, coil/target/ViewTarget, coil/transition/TransitionTarget {

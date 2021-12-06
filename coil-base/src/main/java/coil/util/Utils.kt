@@ -24,26 +24,28 @@ import android.widget.ImageView.ScaleType.FIT_END
 import android.widget.ImageView.ScaleType.FIT_START
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import coil.ComponentRegistry
+import coil.EventListener
 import coil.ImageLoader
 import coil.base.R
 import coil.decode.DataSource
 import coil.decode.Decoder
 import coil.disk.DiskCache
 import coil.fetch.Fetcher
+import coil.intercept.Interceptor
+import coil.intercept.RealInterceptorChain
 import coil.memory.MemoryCache
 import coil.request.DefaultRequestOptions
 import coil.request.Parameters
 import coil.request.ViewTargetRequestManager
+import coil.size.Dimension
 import coil.size.Scale
 import coil.transform.Transformation
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
 import java.util.Optional
-import kotlin.coroutines.CoroutineContext
 
 internal val View.requestManager: ViewTargetRequestManager
     get() {
@@ -154,10 +156,6 @@ internal fun isMainThread(): Boolean = Looper.myLooper() == Looper.getMainLooper
 internal inline val Any.identityHashCode: Int
     get() = System.identityHashCode(this)
 
-@OptIn(ExperimentalStdlibApi::class)
-internal inline val CoroutineContext.dispatcher: CoroutineDispatcher
-    get() = get(CoroutineDispatcher) ?: error("Current context doesn't contain CoroutineDispatcher in it: $this")
-
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun <T> Deferred<T>.getCompletedOrNull(): T? {
     return try {
@@ -194,6 +192,18 @@ internal fun DiskCache.Editor.abortQuietly() {
         abort()
     } catch (_: Exception) {}
 }
+
+internal fun Dimension.pxString(): String {
+    return if (this is Dimension.Pixels) px.toString() else toString()
+}
+
+internal val Interceptor.Chain.isPlaceholderCached: Boolean
+    get() = this is RealInterceptorChain && isPlaceholderCached
+
+internal val Interceptor.Chain.eventListener: EventListener
+    get() = if (this is RealInterceptorChain) eventListener else EventListener.NONE
+
+internal fun Int.isMinOrMax() = this == Int.MIN_VALUE || this == Int.MAX_VALUE
 
 internal fun unsupported(): Nothing = error("Unsupported")
 

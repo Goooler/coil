@@ -9,24 +9,26 @@ import coil.ImageLoader
 import coil.fetch.SourceResult
 import coil.request.Options
 import coil.size
-import coil.size.OriginalSize
-import coil.size.PixelSize
+import coil.size.Dimension
 import coil.size.Scale
 import coil.size.Size
 import coil.util.assertIsSimilarTo
+import coil.util.assumeTrue
 import coil.util.decodeBitmapAsset
 import coil.util.isSimilarTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import okio.buffer
 import okio.source
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BitmapFactoryDecoderTest {
 
     private lateinit var context: Context
@@ -39,50 +41,78 @@ class BitmapFactoryDecoderTest {
     }
 
     @Test
-    fun basic() {
+    fun basic() = runTest {
         val (drawable, isSampled) = decode(
             assetName = "normal.jpg",
-            size = PixelSize(100, 100)
+            size = Size(100, 100)
         )
 
         assertTrue(isSampled)
-        assertTrue(drawable is BitmapDrawable)
-        assertEquals(PixelSize(100, 125), drawable.bitmap.size)
+        assertIs<BitmapDrawable>(drawable)
+        assertEquals(Size(100, 125), drawable.bitmap.size)
         assertEquals(Bitmap.Config.ARGB_8888, drawable.bitmap.config)
     }
 
     @Test
-    fun malformedImageThrows() {
+    fun unboundedWidth() = runTest {
+        val (drawable, isSampled) = decode(
+            assetName = "normal.jpg",
+            size = Size(Dimension.Original, Dimension(100)),
+            scale = Scale.FIT
+        )
+
+        assertTrue(isSampled)
+        assertIs<BitmapDrawable>(drawable)
+        assertEquals(Size(80, 100), drawable.bitmap.size)
+        assertEquals(Bitmap.Config.ARGB_8888, drawable.bitmap.config)
+    }
+
+    @Test
+    fun unboundedHeight() = runTest {
+        val (drawable, isSampled) = decode(
+            assetName = "normal.jpg",
+            size = Size(Dimension(100), Dimension.Original),
+            scale = Scale.FIT
+        )
+
+        assertTrue(isSampled)
+        assertIs<BitmapDrawable>(drawable)
+        assertEquals(Size(100, 125), drawable.bitmap.size)
+        assertEquals(Bitmap.Config.ARGB_8888, drawable.bitmap.config)
+    }
+
+    @Test
+    fun malformedImageThrows() = runTest {
         assertFailsWith<IllegalStateException> {
             decode(
                 assetName = "malformed.jpg",
-                size = PixelSize(100, 100)
+                size = Size(100, 100)
             )
         }
     }
 
     @Test
-    fun resultIsSampledIfGreaterThanHalfSize() {
+    fun resultIsSampledIfGreaterThanHalfSize() = runTest {
         val (drawable, isSampled) = decode(
             assetName = "normal.jpg",
-            size = PixelSize(600, 600)
+            size = Size(600, 600)
         )
 
         assertTrue(isSampled)
-        assertTrue(drawable is BitmapDrawable)
-        assertEquals(PixelSize(600, 750), drawable.bitmap.size)
+        assertIs<BitmapDrawable>(drawable)
+        assertEquals(Size(600, 750), drawable.bitmap.size)
     }
 
     @Test
-    fun originalSizeDimensionsAreResolvedCorrectly() {
-        val size = OriginalSize
+    fun originalSizeDimensionsAreResolvedCorrectly() = runTest {
+        val size = Size.ORIGINAL
         val normal = decodeBitmap("normal.jpg", size)
-        assertEquals(PixelSize(1080, 1350), normal.size)
+        assertEquals(Size(1080, 1350), normal.size)
     }
 
     @Test
-    fun exifTransformationsAreAppliedCorrectly() {
-        val size = PixelSize(500, 500)
+    fun exifTransformationsAreAppliedCorrectly() = runTest {
+        val size = Size(500, 500)
         val normal = decodeBitmap("normal.jpg", size)
 
         for (index in 1..8) {
@@ -92,8 +122,8 @@ class BitmapFactoryDecoderTest {
     }
 
     @Test
-    fun largeExifMetadata() {
-        val size = PixelSize(500, 500)
+    fun largeExifMetadata() = runTest {
+        val size = Size(500, 500)
         val expected = decodeBitmap("exif/large_metadata_normalized.jpg", size)
         val actual = decodeBitmap("exif/large_metadata.jpg", size)
         expected.assertIsSimilarTo(actual)
@@ -101,160 +131,168 @@ class BitmapFactoryDecoderTest {
 
     /** Regression test: https://github.com/coil-kt/coil/issues/619 */
     @Test
-    fun heicExifMetadata() {
+    fun heicExifMetadata() = runTest {
         // HEIC files are not supported before API 30.
         assumeTrue(SDK_INT >= 30)
 
         // Ensure this completes and doesn't end up in an infinite loop.
         val normal = context.decodeBitmapAsset("exif/basic.heic")
-        val actual = decodeBitmap("exif/basic.heic", OriginalSize)
+        val actual = decodeBitmap("exif/basic.heic", Size.ORIGINAL)
         normal.assertIsSimilarTo(actual)
     }
 
     @Test
-    fun allowInexactSize_true() {
+    fun allowInexactSize_true() = runTest {
         val result = decodeBitmap(
             assetName = "normal.jpg",
             options = Options(
                 context = context,
-                size = PixelSize(1500, 1500),
+                size = Size(1500, 1500),
                 scale = Scale.FIT,
                 allowInexactSize = true
             )
         )
-        assertEquals(PixelSize(1080, 1350), result.size)
+        assertEquals(Size(1080, 1350), result.size)
     }
 
     @Test
-    fun allowInexactSize_false() {
+    fun allowInexactSize_false() = runTest {
         val result = decodeBitmap(
             assetName = "normal.jpg",
             options = Options(
                 context = context,
-                size = PixelSize(1500, 1500),
+                size = Size(1500, 1500),
                 scale = Scale.FIT,
                 allowInexactSize = false
             )
         )
-        assertEquals(PixelSize(1200, 1500), result.size)
+        assertEquals(Size(1200, 1500), result.size)
     }
 
     @Test
-    fun allowRgb565_true() {
+    fun allowRgb565_true() = runTest {
         val result = decodeBitmap(
             assetName = "normal.jpg",
             options = Options(
                 context = context,
-                size = PixelSize(500, 500),
+                size = Size(500, 500),
                 scale = Scale.FILL,
                 allowRgb565 = true
             )
         )
-        assertEquals(PixelSize(500, 625), result.size)
+        assertEquals(Size(500, 625), result.size)
         assertEquals(Bitmap.Config.RGB_565, result.config)
     }
 
     @Test
-    fun allowRgb565_false() {
+    fun allowRgb565_false() = runTest {
         val result = decodeBitmap(
             assetName = "normal.jpg",
             options = Options(
                 context = context,
-                size = PixelSize(500, 500),
+                size = Size(500, 500),
                 scale = Scale.FILL,
                 allowRgb565 = false
             )
         )
-        assertEquals(PixelSize(500, 625), result.size)
+        assertEquals(Size(500, 625), result.size)
         assertEquals(Bitmap.Config.ARGB_8888, result.config)
     }
 
     @Test
-    fun premultipliedAlpha_true() {
+    fun premultipliedAlpha_true() = runTest {
         val result = decodeBitmap(
             assetName = "normal_alpha.png",
             options = Options(
                 context = context,
-                size = PixelSize(400, 200),
+                size = Size(400, 200),
                 scale = Scale.FILL,
                 premultipliedAlpha = true
             )
         )
-        assertEquals(PixelSize(400, 200), result.size)
+        assertEquals(Size(400, 200), result.size)
         assertTrue(result.isPremultiplied)
     }
 
     @Test
-    fun premultipliedAlpha_false() {
+    fun premultipliedAlpha_false() = runTest {
         val result = decodeBitmap(
             assetName = "normal_alpha.png",
             options = Options(
                 context = context,
-                size = PixelSize(400, 200),
+                size = Size(400, 200),
                 scale = Scale.FILL,
                 premultipliedAlpha = false
             )
         )
-        assertEquals(PixelSize(400, 200), result.size)
+        assertEquals(Size(400, 200), result.size)
         assertFalse(result.isPremultiplied)
     }
 
     @Test
-    fun lossyWebP() {
-        val expected = decodeBitmap("normal.jpg", PixelSize(450, 675))
-        decodeBitmap("lossy.webp", PixelSize(450, 675)).assertIsSimilarTo(expected)
+    fun lossyWebP() = runTest {
+        val expected = decodeBitmap("normal.jpg", Size(450, 675))
+        decodeBitmap("lossy.webp", Size(450, 675)).assertIsSimilarTo(expected)
     }
 
     @Test
-    fun png_16bit() {
+    fun png_16bit() = runTest {
         // The emulator runs out of memory on pre-23.
         assumeTrue(SDK_INT >= 23)
 
-        val (drawable, isSampled) = decode("16_bit.png", PixelSize(250, 250))
+        val (drawable, isSampled) = decode("16_bit.png", Size(250, 250))
 
         assertTrue(isSampled)
-        assertTrue(drawable is BitmapDrawable)
-        assertEquals(PixelSize(250, 250), drawable.bitmap.size)
+        assertIs<BitmapDrawable>(drawable)
+        assertEquals(Size(250, 250), drawable.bitmap.size)
 
         val expectedConfig = if (SDK_INT >= 26) Bitmap.Config.RGBA_F16 else Bitmap.Config.ARGB_8888
         assertEquals(expectedConfig, drawable.bitmap.config)
     }
 
     @Test
-    fun largeJpeg() {
-        decodeBitmap("large.jpg", PixelSize(1080, 1920))
+    fun largeJpeg() = runTest {
+        decodeBitmap("large.jpg", Size(1080, 1920))
     }
 
     /** Regression test: https://github.com/coil-kt/coil/issues/368 */
     @Test
-    fun largePng() {
+    fun largePng() = runTest {
         // Ensure that this doesn't cause an OOM exception - particularly on API 23 and below.
-        decodeBitmap("large.png", PixelSize(1080, 1920))
+        decodeBitmap("large.png", Size(1080, 1920))
     }
 
     @Test
-    fun largeWebP() {
-        decodeBitmap("large.webp", PixelSize(1080, 1920))
+    fun largeWebP() = runTest {
+        decodeBitmap("large.webp", Size(1080, 1920))
     }
 
     @Test
-    fun largeHeic() {
+    fun largeHeic() = runTest {
         // HEIC files are not supported before API 30.
         assumeTrue(SDK_INT >= 30)
 
-        decodeBitmap("large.heic", PixelSize(1080, 1920))
+        decodeBitmap("large.heic", Size(1080, 1920))
     }
 
-    private fun decodeBitmap(assetName: String, size: Size): Bitmap =
-        decodeBitmap(assetName, Options(context = context, size = size, scale = Scale.FILL))
+    private suspend fun decodeBitmap(
+        assetName: String,
+        size: Size,
+        scale: Scale = Scale.FILL
+    ): Bitmap = decodeBitmap(assetName, Options(context = context, size = size, scale = scale))
 
-    private fun decodeBitmap(assetName: String, options: Options): Bitmap =
-        (decode(assetName, options).drawable as BitmapDrawable).bitmap
+    private suspend fun decodeBitmap(
+        assetName: String,
+        options: Options
+    ): Bitmap = (decode(assetName, options).drawable as BitmapDrawable).bitmap
 
-    private fun decode(assetName: String, size: Size): DecodeResult =
-        decode(assetName, Options(context = context, size = size, scale = Scale.FILL))
+    private suspend fun decode(
+        assetName: String,
+        size: Size,
+        scale: Scale = Scale.FILL
+    ): DecodeResult = decode(assetName, Options(context = context, size = size, scale = scale))
 
-    private fun decode(assetName: String, options: Options): DecodeResult = runBlocking {
+    private suspend fun decode(assetName: String, options: Options): DecodeResult {
         val source = context.assets.open(assetName).source().buffer()
         val decoder = decoderFactory.create(
             result = SourceResult(
@@ -271,6 +309,6 @@ class BitmapFactoryDecoderTest {
         val exception = assertFailsWith<IllegalStateException> { source.exhausted() }
         assertEquals("closed", exception.message)
 
-        return@runBlocking result
+        return result
     }
 }

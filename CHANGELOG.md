@@ -1,5 +1,93 @@
 # Changelog
 
+## [2.0.0-alpha05] - November 28, 2021
+
+- **Important**: Refactor `Size` to support using the image's original size for either dimension.
+    - `Size` is now composed of two `Dimension` values for its width and height. `Dimension` can either be a positive pixel value or `Dimension.Original`.
+    - This change was made to better support unbounded width/height values (e.g. `wrap_content`, `Constraints.Infinity`) when one dimension is a fixed pixel value.
+- Fix: Support inspection mode (preview) for `AsyncImage`.
+- Fix: `SuccessResult.memoryCacheKey` should always be `null` if `imageLoader.memoryCache` is null.
+- Convert `ImageLoader`, `SizeResolver`, and `ViewSizeResolver` constructor-like `invoke` functions to top level functions.
+- Make `CrossfadeDrawable` start and end drawables public API.
+- Mutate `ImageLoader` placeholder/error/fallback drawables.
+- Add default arguments to `SuccessResult`'s constructor.
+- Depend on `androidx.collection` instead of `androidx.collection-ktx`.
+- Update Okhttp to 4.9.3.
+
+## [2.0.0-alpha04] - November 22, 2021
+
+- **New**: Add `AsyncImage` to `coil-compose`.
+    - `AsyncImage` is a composable that executes an `ImageRequest` asynchronously and renders the result.
+    - **`AsyncImage` is intended to replace `rememberImagePainter` for most use cases.**
+    - Its API is not final and may change before the final 2.0 release.
+    - It has a similar API to `Image` and supports the same arguments: `Alignment`, `ContentScale`, `alpha`, `ColorFilter`, and `FilterQuality`.
+    - It supports overwriting what's drawn for each `AsyncImagePainter` state using the `content`, `loading`, `success`, and `error` arguments.
+    - It fixes a number of design issues that `rememberImagePainter` has with resolving image size and scale.
+    - Example usages:
+
+```kotlin
+// Only draw the image.
+AsyncImage(
+    model = "https://example.com/image.jpg",
+    contentDescription = null // Avoid `null` and set this to a localized string if possible.
+)
+
+// Draw the image with a circle crop, crossfade, and overwrite the `loading` state.
+AsyncImage(
+    model = ImageRequest.Builder(LocalContext.current)
+        .data("https://example.com/image.jpg")
+        .crossfade(true)
+        .build(),
+    contentDescription = null,
+    modifier = Modifier
+        .clip(CircleShape),
+    loading = {
+        CircularProgressIndicator()
+    },
+    contentScale = ContentScale.Crop
+)
+
+// Draw the image with a circle crop, crossfade, and overwrite all states.
+AsyncImage(
+    model = ImageRequest.Builder(LocalContext.current)
+        .data("https://example.com/image.jpg")
+        .crossfade(true)
+        .build(),
+    contentDescription = null,
+    modifier = Modifier
+        .clip(CircleShape),
+    contentScale = ContentScale.Crop
+) { state ->
+    if (state is AsyncImagePainter.State.Loading) {
+        CircularProgressIndicator()
+    } else {
+        AsyncImageContent() // Draws the image.
+    }
+}
+```
+
+- **Important**: Rename `ImagePainter` to `AsyncImagePainter` and `rememberImagePainter` to `rememberAsyncImagePainter`.
+    - `ExecuteCallback` is no longer supported. To have the `AsyncImagePainter` skip waiting for `onDraw` to be called, set `ImageRequest.size(OriginalSize)` (or any size) instead.
+    - Add an optional `FilterQuality` argument to `rememberAsyncImagePainter`.
+- Use coroutines for cleanup operations in `DiskCache` and add `DiskCache.Builder.cleanupDispatcher`.
+- Fix Compose preview for placeholder set using `ImageLoader.Builder.placeholder`.
+- Mark `LocalImageLoader.current` with `@ReadOnlyComposable` to generate more efficient code.
+- Update Compose to 1.1.0-beta03 and depend on `compose.foundation` instead of `compose.ui`.
+- Update `androidx.appcompat-resources` to 1.4.0.
+
+## [2.0.0-alpha03] - November 12, 2021
+
+- Add ability to load music thumbnails on Android 29+. ([#967](https://github.com/coil-kt/coil/pull/967))
+- Fix: Use `context.resources` to load resources for current package. ([#968](https://github.com/coil-kt/coil/pull/968))
+- Fix: `clear` -> `dispose` replacement expression. ([#970](https://github.com/coil-kt/coil/pull/970))
+- Update Compose to 1.0.5.
+- Update `accompanist-drawablepainter` to 0.20.2.
+- Update Okio to 3.0.0.
+- Update `androidx.annotation` to 1.3.0.
+- Update `androidx.core` to 1.7.0.
+- Update `androidx.lifecycle` to 2.4.0.
+    - Remove dependency on `lifecycle-common-java8` as it's been merged into `lifecycle-common`.
+
 ## [2.0.0-alpha02] - October 24, 2021
 
 - Add a new `coil-bom` artifact which includes a [bill of materials](https://docs.gradle.org/7.2/userguide/platforms.html#sub:bom_import).
