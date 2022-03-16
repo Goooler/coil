@@ -19,12 +19,7 @@ jobs:
                   distribution: 'zulu'
                   java-version: 17
             - run: ./ci_clear_gradle_cache.sh
-            - uses: actions/cache@v2
-              with:
-                  path: |
-                      ~/.gradle/caches
-                      ~/.gradle/wrapper
-                  key: ${{ runner.os }}-gradle-${{ env.CACHE_VERSION }}-${{ hashFiles('**/**.gradle.kts', '**/gradle/wrapper/gradle-wrapper.properties', '**/libs.versions.toml') }}
+            - uses: gradle/gradle-build-action@v2
 
             - name: Check Gradle wrapper
               uses: gradle/wrapper-validation-action@v1
@@ -48,13 +43,7 @@ jobs:
                   distribution: 'zulu'
                   java-version: 17
             - run: ./ci_clear_gradle_cache.sh
-            - uses: actions/cache@v2
-              with:
-                  path: |
-                      ~/.gradle/caches
-                      ~/.gradle/wrapper
-                  key: ${{ runner.os }}-gradle-${{ env.CACHE_VERSION }}-${{ hashFiles('**/**.gradle.kts', '**/gradle/wrapper/gradle-wrapper.properties', '**/libs.versions.toml') }}
-
+            - uses: gradle/gradle-build-action@v2
             - name: Unit tests
               run: ./gradlew testDebugUnitTest
 
@@ -74,12 +63,7 @@ jobs:
                   distribution: 'zulu'
                   java-version: 17
             - run: ./ci_clear_gradle_cache.sh
-            - uses: actions/cache@v2
-              with:
-                  path: |
-                      ~/.gradle/caches
-                      ~/.gradle/wrapper
-                  key: ${{ runner.os }}-gradle-${{ env.CACHE_VERSION }}-${{ hashFiles('**/**.gradle.kts', '**/gradle/wrapper/gradle-wrapper.properties', '**/libs.versions.toml') }}
+            - uses: gradle/gradle-build-action@v2
 
             # API 30+ emulators only have x86_64 system images.
             - name: Get AVD info
@@ -136,12 +120,7 @@ jobs:
                   distribution: 'zulu'
                   java-version: 17
             - run: ./ci_clear_gradle_cache.sh
-            - uses: actions/cache@v2
-              with:
-                  path: |
-                      ~/.gradle/caches
-                      ~/.gradle/wrapper
-                  key: ${{ runner.os }}-gradle-${{ env.CACHE_VERSION }}-${{ hashFiles('**/**.gradle.kts', '**/gradle/wrapper/gradle-wrapper.properties', '**/libs.versions.toml') }}
+            - uses: gradle/gradle-build-action@v2
 
             - name: Deploy Snapshot
               env:
